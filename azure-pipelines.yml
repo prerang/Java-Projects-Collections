@@ -1,0 +1,52 @@
+# Maven
+# Build your Java project and run tests with Apache Maven.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/java
+
+trigger:
+- main
+
+pool:
+  vmImage: ip-172-31-3-43
+
+steps:
+  # Step 1: Set up JDK (Java Development Kit)
+  - task: UseJavaToolInstaller@1
+    inputs:
+      versionSpec: '1.8'  # Specify Java version (1.8 in this case)
+    displayName: 'Install JDK 1.8'
+
+  # Step 2: Checkout the repository
+  - task: Checkout@1
+    displayName: 'Checkout Code'
+
+  # Step 3: Set up Maven (to build the project)
+  - task: Maven@3
+    inputs:
+      mavenPomFile: 'pom.xml'  # Path to the Maven POM file
+      goals: 'clean install'  # Clean and install the dependencies
+      options: '-X'  # Run in debug mode to show more detailed logs
+    displayName: 'Build with Maven'
+
+  # Step 4: Run unit tests using Maven
+  - task: Maven@3
+    inputs:
+      mavenPomFile: 'pom.xml'
+      goals: 'test'  # Run tests only
+    displayName: 'Run Unit Tests'
+
+  # Step 5: Publish Test Results
+  - task: PublishTestResults@2
+    inputs:
+      testResultsFiles: '**/TEST-*.xml'  # Maven test results format
+      testRunTitle: 'Java Unit Tests'
+    displayName: 'Publish Test Results'
+
+  # Step 6: Archive Build Output
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)'  # Publish artifacts like JAR files
+      ArtifactName: 'drop'
+      publishLocation: 'Container'
+    displayName: 'Publish Build Artifacts'
+    
