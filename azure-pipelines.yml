@@ -49,3 +49,10 @@ steps:
     goals: 'install'
 
 
+# 7️⃣ PUBLISH ARTIFACT (ADD HERE)
+- task: PublishBuildArtifacts@1
+  displayName: "Publish Artifact to Azure"
+  inputs:
+    PathtoPublish: '$(System.DefaultWorkingDirectory)/target'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
