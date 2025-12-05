@@ -1,10 +1,22 @@
 trigger:
-- main   # your branch name
+- main
 
 pool:
   name: 'Default'
 
 steps:
+
+# 0️⃣ SONARCLOUD: PREPARE ANALYSIS
+- task: SonarCloudPrepare@2
+  displayName: "Prepare SonarCloud Analysis"
+  inputs:
+    SonarCloud: 'SonarCloud'        # service connection name
+    organization: 'prerang'            # your org name
+    scannerMode: 'Other'
+    configMode: 'manual'
+    cliProjectKey: 'prerang_demo'       # sonar project key
+    cliProjectName: 'demo'
+    cliSources: 'src'
 
 # 1️⃣ VALIDATE
 - task: Maven@3
@@ -29,37 +41,47 @@ steps:
 
 # 4️⃣ PACKAGE
 - task: Maven@3
-  displayName: 'Package Artifact (JAR/WAR)'
+  displayName: 'Package Artifact'
   inputs:
     mavenPomFile: 'pom.xml'
     goals: 'package'
 
 # 5️⃣ VERIFY
 - task: Maven@3
-  displayName: 'Verify Artifact (Integration Tests / Quality Checks)'
+  displayName: 'Verify Artifact'
   inputs:
     mavenPomFile: 'pom.xml'
     goals: 'verify'
 
 # 6️⃣ INSTALL
 - task: Maven@3
-  displayName: 'Install Artifact to Local Repository'
+  displayName: 'Install Artifact'
   inputs:
     mavenPomFile: 'pom.xml'
     goals: 'install'
 
+# ⭐ BUILD & SONAR ANALYSIS
+- task: Maven@3
+  displayName: "SonarCloud Code Analysis"
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: 'sonar:sonar'
+    options: >
+      -Dsonar.projectKey=prerang_demo
+      -Dsonar.organization=prerang
+      -Dsonar.host.url=https://sonarcloud.io
+      -Dsonar.login=$(SONAR_TOKEN)
 
-# 7️⃣ PUBLISH ARTIFACT (ADD HERE)
+# 7️⃣ SONARCLOUD QUALITY GATE
+- task: SonarCloudPublish@2
+  displayName: "Publish SonarCloud Quality Gate"
+  inputs:
+    pollingTimeoutSec: '300'
+
+# 8️⃣ PUBLISH ARTIFACT
 - task: PublishBuildArtifacts@1
   displayName: "Publish Artifact to Azure"
   inputs:
     PathtoPublish: '$(System.DefaultWorkingDirectory)/target'
     ArtifactName: 'drop'
     publishLocation: 'Container'
-
-- task: DownloadBuildArtifacts@1
-  inputs:
-    buildType: 'current'
-    downloadType: 'single'
-    artifactName: 'drop'
-    downloadPath: '$(System.ArtifactsDirectory)'
