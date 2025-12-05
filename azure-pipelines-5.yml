@@ -10,7 +10,7 @@ steps:
 - task: SonarCloudPrepare@2
   displayName: "Prepare SonarCloud Analysis"
   inputs:
-    SonarCloud: 'SonarCloudService'        # service connection name
+    SonarCloud: 'SonarCloud'        # service connection name
     organization: 'prerang'            # your org name
     scannerMode: 'Other'
     configMode: 'manual'
@@ -67,8 +67,8 @@ steps:
     mavenPomFile: 'pom.xml'
     goals: 'sonar:sonar'
     options: >
-      -Dsonar.projectKey=myorg_myproject
-      -Dsonar.organization=my-org-name
+      -Dsonar.projectKey=prerang
+      -Dsonar.organization=prerang
       -Dsonar.host.url=https://sonarcloud.io
       -Dsonar.login=$(SONAR_TOKEN)
 
