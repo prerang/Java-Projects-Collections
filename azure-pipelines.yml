@@ -1,52 +1,56 @@
-# Maven
-# Build your Java project and run tests with Apache Maven.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/java
-
 trigger:
-- main
+- main   # your branch name
 
 pool:
-  vmImage: ip-172-31-3-43
+  name: 'Default'
 
 steps:
-  # Step 1: Set up JDK (Java Development Kit)
-  - task: UseJavaToolInstaller@1
-    inputs:
-      versionSpec: '1.8'  # Specify Java version (1.8 in this case)
-    displayName: 'Install JDK 1.8'
 
-  # Step 2: Checkout the repository
-  - task: Checkout@1
-    displayName: 'Checkout Code'
+# 1️⃣ VALIDATE
+- task: Maven@3
+  displayName: 'Validate Project'
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: 'validate'
 
-  # Step 3: Set up Maven (to build the project)
-  - task: Maven@3
-    inputs:
-      mavenPomFile: 'pom.xml'  # Path to the Maven POM file
-      goals: 'clean install'  # Clean and install the dependencies
-      options: '-X'  # Run in debug mode to show more detailed logs
-    displayName: 'Build with Maven'
+# 2️⃣ COMPILE
+- task: Maven@3
+  displayName: 'Compile Source Code'
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: 'compile'
 
-  # Step 4: Run unit tests using Maven
-  - task: Maven@3
-    inputs:
-      mavenPomFile: 'pom.xml'
-      goals: 'test'  # Run tests only
-    displayName: 'Run Unit Tests'
+# 3️⃣ TEST
+- task: Maven@3
+  displayName: 'Run Unit Tests'
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: 'test'
 
-  # Step 5: Publish Test Results
-  - task: PublishTestResults@2
-    inputs:
-      testResultsFiles: '**/TEST-*.xml'  # Maven test results format
-      testRunTitle: 'Java Unit Tests'
-    displayName: 'Publish Test Results'
+# 4️⃣ PACKAGE
+- task: Maven@3
+  displayName: 'Package Artifact (JAR/WAR)'
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: 'package'
 
-  # Step 6: Archive Build Output
-  - task: PublishBuildArtifacts@1
-    inputs:
-      PathtoPublish: '$(Build.ArtifactStagingDirectory)'  # Publish artifacts like JAR files
-      ArtifactName: 'drop'
-      publishLocation: 'Container'
-    displayName: 'Publish Build Artifacts'
-    
+# 5️⃣ VERIFY
+- task: Maven@3
+  displayName: 'Verify Artifact (Integration Tests / Quality Checks)'
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: 'verify'
+
+# 6️⃣ INSTALL
+- task: Maven@3
+  displayName: 'Install Artifact to Local Repository'
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: 'install'
+
+# 7️⃣ DEPLOY
+- task: Maven@3
+  displayName: 'Deploy Artifact to Remote Repo'
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: 'deploy'
