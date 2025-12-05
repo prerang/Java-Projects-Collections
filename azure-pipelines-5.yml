@@ -1,0 +1,87 @@
+trigger:
+- main
+
+pool:
+  name: 'Default'
+
+steps:
+
+# 0️⃣ SONARCLOUD: PREPARE ANALYSIS
+- task: SonarCloudPrepare@2
+  displayName: "Prepare SonarCloud Analysis"
+  inputs:
+    SonarCloud: 'SonarCloudService'        # service connection name
+    organization: 'prerang'            # your org name
+    scannerMode: 'Other'
+    configMode: 'manual'
+    cliProjectKey: 'prerang'       # sonar project key
+    cliProjectName: 'demo'
+    cliSources: 'src'
+
+# 1️⃣ VALIDATE
+- task: Maven@3
+  displayName: 'Validate Project'
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: 'validate'
+
+# 2️⃣ COMPILE
+- task: Maven@3
+  displayName: 'Compile Source Code'
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: 'compile'
+
+# 3️⃣ TEST
+- task: Maven@3
+  displayName: 'Run Unit Tests'
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: 'test'
+
+# 4️⃣ PACKAGE
+- task: Maven@3
+  displayName: 'Package Artifact'
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: 'package'
+
+# 5️⃣ VERIFY
+- task: Maven@3
+  displayName: 'Verify Artifact'
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: 'verify'
+
+# 6️⃣ INSTALL
+- task: Maven@3
+  displayName: 'Install Artifact'
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: 'install'
+
+# ⭐ BUILD & SONAR ANALYSIS
+- task: Maven@3
+  displayName: "SonarCloud Code Analysis"
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: 'sonar:sonar'
+    options: >
+      -Dsonar.projectKey=myorg_myproject
+      -Dsonar.organization=my-org-name
+      -Dsonar.host.url=https://sonarcloud.io
+      -Dsonar.login=$(SONAR_TOKEN)
+
+# 7️⃣ SONARCLOUD QUALITY GATE
+- task: SonarCloudPublish@2
+  displayName: "Publish SonarCloud Quality Gate"
+  inputs:
+    pollingTimeoutSec: '300'
+
+# 8️⃣ PUBLISH ARTIFACT
+- task: PublishBuildArtifacts@1
+  displayName: "Publish Artifact to Azure"
+  inputs:
+    PathtoPublish: '$(System.DefaultWorkingDirectory)/target'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
