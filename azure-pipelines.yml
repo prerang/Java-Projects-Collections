@@ -48,9 +48,4 @@ steps:
     mavenPomFile: 'pom.xml'
     goals: 'install'
 
-# 7️⃣ DEPLOY
-- task: Maven@3
-  displayName: 'Deploy Artifact to Remote Repo'
-  inputs:
-    mavenPomFile: 'pom.xml'
-    goals: 'deploy'
+
